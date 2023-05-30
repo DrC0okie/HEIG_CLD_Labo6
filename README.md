@@ -1,4 +1,4 @@
-# CLD - LAB05 : Kubernetes
+# CLD - LAB06 : Infrastructure-as-code and configuration management - Terraform, Ansible and Gitlab
 **Group S : A. David, T. Van Hove**
 
 **Date : 01.06.2023**
@@ -21,9 +21,9 @@ In the third part, which is optional, we'll use Terraform as a team. The solutio
 
 # Part 1 - Install Terraform
 
-Note : we installed Terraform on a W11 operating system.
+Note : We installed the Terraform application in a Ubuntu 22.04 system based on WSL (Windows Subsystem for Linux).
 
-We follow the instructions on the Terraform's website : https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli
+
 
 
 
