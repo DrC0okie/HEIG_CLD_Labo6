@@ -23,15 +23,15 @@ In the third part, which is optional, we'll use Terraform as a team. The solutio
 
 Note : We installed the Terraform application in a Ubuntu 22.04 system based on WSL (Windows Subsystem for Linux).
 
+As proof, we have the following output :
 
-
-
-
-
-
-
+![](.\figures\Terraform_installation.png)
 
 # Part 2 - Create a cloud infrastructure on Google Compute Engine with Terraform
+
+
+
+The project-ID : **labgce-388319**
 
 
 
