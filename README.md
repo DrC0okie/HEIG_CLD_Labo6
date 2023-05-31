@@ -7,7 +7,7 @@
 
 **Assistant : Rémi Poulard**
 
-In this lab, we're going to deploy a website running in the cloud and using tools that adhere to the principle of infrastructure as code. We'll be using NGINX and Google Cloud technologies.
+In this lab, we are going to deploy a website running in the cloud and using Terraform and Ansible, tools that use the principle of infrastructure as code. We'll be using NGINX and Google Cloud technologies.
 
 In the first part of this lab, we're going to provision the cloud infrastructure. In other words, we'll create the necessary resources on the cloud.
 
