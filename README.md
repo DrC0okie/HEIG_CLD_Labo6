@@ -29,7 +29,10 @@ We installed the Terraform application in a Ubuntu 22.04 system based on WSL and
 
 
 
-The project-ID : **labgce-388319**
+The project-IDs :
+
+- **labgce-388319** For Anthony account
+- **labgce-388413** Four Tim account
 
 
 
