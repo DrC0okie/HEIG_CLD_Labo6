@@ -19,7 +19,7 @@ In the third part, which is optional, we'll use Terraform as a team. The solutio
 
 [toc]
 
-# Part 1 - Install Terraform
+# Task 1: Install Terraform
 
 Note : We installed the Terraform application in a Ubuntu 22.04 system based on WSL (Windows Subsystem for Linux).
 
@@ -27,7 +27,7 @@ As proof, we have the following output :
 
 ![](.\figures\Terraform_installation.png)
 
-# Part 2 - Create a cloud infrastructure on Google Compute Engine with Terraform
+# Task 2: Create a cloud infrastructure on Google Compute Engine with Terraform
 
 
 
@@ -39,34 +39,32 @@ The project-ID : **labgce-388319**
 
 
 
-# Part 3 : Install Ansible
+# Task 3: Install Ansible
 
 
 
 
 
-# Part 4 : Configure Ansible to connect to the managed VM
+# Task 4: Configure Ansible to connect to the managed VM
 
 
 
 
 
-# Part 5 : Install a web server and configure a web site
+# Task 5: Install a web server and configure a web site
 
 
 
 
 
-# Part 6 : Adding a handler for NGINX restart
+# Task 6: Adding a handler for NGINX restart
 
 
 
 
 
-# Part 7 : Test desired state configuration principes
+# Task 7: Test Desired State Configuration principles
 
 
 
 
-
-# Part 8 : Configure your infrastructure using a ci/cd pipeline
