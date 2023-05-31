@@ -21,9 +21,7 @@ In the third part, which is optional, we'll use Terraform as a team. The solutio
 
 # Task 1: Install Terraform
 
-Note : We installed the Terraform application in a Ubuntu 22.04 system based on WSL (Windows Subsystem for Linux).
-
-As proof, we have the following output :
+We installed the Terraform application in a Ubuntu 22.04 system based on WSL and did not encounter any difficulties. The following screenshot shows the version of terraform we used:
 
 ![](.\figures\Terraform_installation.png)
 
@@ -64,7 +62,6 @@ The project-ID : **labgce-388319**
 
 
 # Task 7: Test Desired State Configuration principles
-
 
 
 
