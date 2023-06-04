@@ -1,0 +1,116 @@
+stages:
+  - init
+  - validate
+  - plan
+  - create
+  - configure
+  - destroy
+
+variables:
+  ANSIBLE_ROOT: ${CI_PROJECT_DIR}/ansible
+  CREDENTIALS_ROOT: ${CI_PROJECT_DIR}/credentials
+  TF_ROOT: ${CI_PROJECT_DIR}/terraform
+
+.ansible:
+  inherit:
+    default: false
+    variables: true
+  image: quay.io/ansible/creator-ee:latest
+  before_script:
+    - echo "${SSH_PRIVATE_KEY}" > "${CREDENTIALS_ROOT}/labgce-ssh-key"
+    - chmod 0600 "${CREDENTIALS_ROOT}/labgce-ssh-key"
+    - cd "${ANSIBLE_ROOT}"
+
+.terraform:
+  inherit:
+    default: false
+    variables: true
+  image: registry.gitlab.com/gitlab-org/terraform-images/stable:latest
+  variables:
+    TF_ADDRESS: ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/terraform/state/labgce
+  before_script:
+    - echo "${GCP_SERVICE_ACCOUNT_KEY}" > "${CREDENTIALS_ROOT}/labgce-service-account-key.json"
+    - chmod 0600 "${CREDENTIALS_ROOT}/labgce-service-account-key.json"
+    - echo "${SSH_PUBLIC_KEY}" > "${CREDENTIALS_ROOT}/labgce-ssh-key.pub"
+    - chmod 0600 "${CREDENTIALS_ROOT}/labgce-ssh-key.pub"
+    - cd "${TF_ROOT}"
+  cache:
+    key: "terraform"
+    paths:
+      - ${TF_ROOT}/.terraform/
+
+terraform-init:
+  stage: init
+  extends: .terraform
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  script:
+    - gitlab-terraform init
+
+terraform-validate:
+  stage: validate
+  extends: .terraform
+  needs:
+    - job: terraform-init
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  script:
+    - gitlab-terraform validate
+
+terraform-plan:
+  stage: plan
+  extends: .terraform
+  needs:
+    - job: terraform-validate
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+  script:
+    - gitlab-terraform plan -var="gcp_project_id=${GCP_PROJECT_ID}" -var="gcp_service_account_key_file_path=${CREDENTIALS_ROOT}/labgce-service-account-key.json" -var="gce_instance_name=${GCE_INSTANCE_NAME}" -var="gce_instance_user=${GCE_INSTANCE_USER}" -var="gce_ssh_pub_key_file_path=${CREDENTIALS_ROOT}/labgce-ssh-key.pub"
+    - gitlab-terraform plan-json
+  artifacts:
+    name: plan
+    paths:
+      - ${TF_ROOT}/plan.cache
+    reports:
+      terraform: ${TF_ROOT}/plan.json
+
+terraform-apply:
+  stage: create
+  extends: .terraform
+  needs:
+    - job: terraform-plan
+      artifacts: true
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+  script:
+    - gitlab-terraform apply
+    - echo "GCE_INSTANCE_IP='$(gitlab-terraform output | cut -d '"' -f2)'" | tee "${CI_PROJECT_DIR}/.env"
+  artifacts:
+    reports:
+      dotenv: .env
+
+ansible-playbook:
+  stage: configure
+  extends: .ansible
+  needs:
+    - job: terraform-apply
+      artifacts: true
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+  script:
+    - sed -i "s/^gce_instance ansible_ssh_host=.*$/gce_instance ansible_ssh_host=${GCE_INSTANCE_IP}/" hosts
+    - ansible-playbook --user "${GCE_INSTANCE_USER}" --private-key "${CREDENTIALS_ROOT}/labgce-ssh-key" --inventory "hosts" --ssh-extra-args "-o StrictHostKeyChecking=no" playbooks/web.yml
+
+terraform-destroy:
+  stage: destroy
+  extends: .terraform
+  needs:
+    - job: terraform-plan
+      artifacts: true
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: manual
+  script:
+    - gitlab-terraform destroy -var="gcp_project_id=${GCP_PROJECT_ID}" -var="gcp_service_account_key_file_path=${CREDENTIALS_ROOT}/labgce-service-account-key.json" -var="gce_instance_name=${GCE_INSTANCE_NAME}" -var="gce_instance_user=${GCE_INSTANCE_USER}" -var="gce_ssh_pub_key_file_path=${CREDENTIALS_ROOT}/labgce-ssh-key.pub"

@@ -21,7 +21,7 @@ In the third part, which is optional, we'll use Terraform as a team. The solutio
 
 # Task 1: Install Terraform
 
-We installed the Terraform application in a Ubuntu 22.04 system based on WSL and did not encounter any difficulties. The following screenshot shows the version of terraform we used:
+We installed Terraform on our laptop based on Ubuntu.
 
 ![](.\figures\Terraform_installation.png)
 
@@ -201,7 +201,7 @@ gce_ssh_pub_key_file_path = "../credentials/labgce-ssh-key.pub"
 
 > Explain what the files created by Terraform are used for.
 
-
+In Terraform, the`terraform.tfvars` file is used to provide input variables for your infrastructure deployments. It is a file with a specific format that allows you to define and assign values to variables used in your Terraform configuration.
 
 > Where is the Terraform state saved? Imagine you are working in a team  and the other team members want to use Terraform, too, to manage the  cloud infrastructure. Do you see any problems with this? Explain.
 
@@ -221,11 +221,17 @@ gce_ssh_pub_key_file_path = "../credentials/labgce-ssh-key.pub"
 
 # Task 3: Install Ansible
 
+We followed the instructions for installing Ansible and everything went smoothly.
 
+Note that we had to set up a virtual Python environment that we named `ansible-env`.
 
-
+![](.\figures\ansible_installation.png)
 
 # Task 4: Configure Ansible to connect to the managed VM
+
+
+
+> What happens if the  infrastructure is deleted and then recreated with Terraform? What needs  to be updated to access the infrastructure again?
 
 
 
@@ -237,13 +243,80 @@ gce_ssh_pub_key_file_path = "../credentials/labgce-ssh-key.pub"
 
 
 
+
+
+> Explain the usage of each file and its contents, add comments to  the different blocks if needed (we must ensure that you understood what  you have done). Link to the online documentation. Link to the online  documentation.
+
+
+
+
+
+
+
+> Copy your hosts file into your report.
+
+
+
+
+
+
+
 # Task 6: Adding a handler for NGINX restart
 
 
 
 
 
-# Task 7: Test Desired State Configuration principles
+> Copy the modified playbook into your report.
 
 
 
+# Task 7: Test Desired State Configuration principles<
+
+
+
+> What is the differences between Terraform and Ansible? Can they both achieve the same goal?
+
+
+
+
+
+> List the advantages and disadvantages of managing your  infrastructure with Terraform/Ansible vs. manually managing your  infrastructure. In which cases is one or the other solution more  suitable?
+
+
+
+
+
+> Suppose you now have a web server in production that you have  configured using Ansible. You are working in the IT department of a  company and some of your system administrator colleagues who don't use  Ansible have logged manually into some of the servers to fix certain  things. You don't know what they did exactly. What do you need to do to  bring all the server again to the initial state? We'll exclude drastic  changes by your colleagues for this question.
+
+
+
+# Task 8 (optionnal) : Configure your infrastructure using a CI/CD Pipeline
+
+ 
+
+> Explain the usage of each file and its contents, add comments to  the different blocks if needed (we must ensure that you understood what  you have done). Link to the online documentation.
+
+
+
+> Explain what CI/CD stands for.
+
+
+
+
+
+> Where is the Terraform state saved? Paste a screenshot where you can see the state with its details in GitLab.
+
+
+
+
+
+>  Paste a link to your GitLab repository as well as a link to a  successful end-to-end pipeline (creation, configuration and destruction  of your infrastructure).
+
+
+
+> Why are some steps manual? What do we try to prevent here?
+
+
+
+> List the advantages and disadvantages of managing your  infrastructure locally or on a platform such as GitLab. In which cases  is one or the other solution more suitable?

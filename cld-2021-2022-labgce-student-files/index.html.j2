@@ -1,0 +1,16 @@
+<html>
+    <head>
+    <title>Welcome to ansible</title> </head>
+    <body>
+    <h1>nginx, configured by Ansible</h1>
+    <p>If you can see this, Ansible successfully installed nginx.</p>
+    <p>{{ ansible_managed }}</p>
+    <p>Some facts Ansible gathered about this machine:
+    <table>
+        <tr><td>OS family:</td><td>{{ ansible_os_family }}</td></tr>
+        <tr><td>Distribution:</td><td>{{ ansible_distribution }}</td></tr>
+        <tr><td>Distribution version:</td><td>{{ ansible_distribution_version }}</td></tr>
+    </table>
+    </p>
+    </body>
+</html>
