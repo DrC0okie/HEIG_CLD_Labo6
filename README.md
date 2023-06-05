@@ -243,8 +243,6 @@ To manage multiple instances in Terraform, we typically have to follow these ste
 
 ![](.\figures\google_cloud_instance.png)
 
-
-
 # Task 3: Install Ansible
 
 We followed the instructions for installing Ansible and everything went smoothly.
