@@ -27,11 +27,9 @@ We installed Terraform on our laptop based on Ubuntu.
 
 # Task 2: Create a cloud infrastructure on Google Compute Engine with Terraform
 
-
-
 The project-IDs :
 
-- **labgce-388319** For Anthony account
+- **labgce-388816**  For Anthony account
 - **labgce-388413** For Tim account
 
 
@@ -201,9 +199,17 @@ gce_ssh_pub_key_file_path = "../credentials/labgce-ssh-key.pub"
 
 > Explain what the files created by Terraform are used for.
 
+
+
 In Terraform, the`terraform.tfvars` file is used to provide input variables for your infrastructure deployments. It is a file with a specific format that allows you to define and assign values to variables used in your Terraform configuration.
 
+
+
 > Where is the Terraform state saved? Imagine you are working in a team  and the other team members want to use Terraform, too, to manage the  cloud infrastructure. Do you see any problems with this? Explain.
+
+
+
+By default, the Terraform state is stored in locally a file name `terraform.state`. The problem is that if other people want to work on the projet, they don't have this file. When we work in a team, it is recommended to store the state remotely for collaboration and consistency.
 
 
 
@@ -211,11 +217,31 @@ In Terraform, the`terraform.tfvars` file is used to provide input variables for 
 
 
 
+(1) If wew reapply the configuration whitout making any changes to the `main.tf` file on our Terraform project, it will detect that there are no changes to apply and will simply refresh the state of our infrastructure. This means that it will query the current state of our ressources and update the Terraform status file accordingly, but itl will not make any changes to out infrastructure.
+
+(2) If we make a change to the `maint.tf` file, and then reapply the configuration, Terraform will compare the new desired state with the current state of our infrastructure. It will determine the changes required to achieve the new desired state, and apply these changes accordingly. Terraform will create, update or remove the resources required to match the new configuration.
+
+
+
 > Explain what you would need to do to manage multiple instances.
 
 
 
+To manage multiple instances in Terraform, we typically have to follow these steps :
+
+1. Define variables : Define in a Terraform configuration make it flexible et reusable. These variables can include things like instance count, instance type and any other parameters that may vary between instances.
+2. Create Resource Definition : Define the resource block in our Terraform configuration file to represent a single instance. Whitin the ressource blocl, you can reference the variables defined in step 1 to make it configurable.
+3. Use the `count` or `for_each` meta-arguments: you can use the  `count` or `for_each` meta-arguments to control the number of instances you wish to manage. The `count` argument lets you specify a fixed number of instances, while `for_each` lets you define a map or set of instances.
+4. Iterate over instances: If you use `for_each`, iterate over instances using a loop in your Terraform code. This allows you to define unique names and other attributes for each instance.
+5. Apply configuration: Run terraform apply to create the desired number of instances based on the defined configuration. Terraform will create the instances and track their status in the Terraform status file.
+6. Manage instances: Since Terraform manages instances, you can make changes to the configuration (e.g. instance type, security groups, etc.) and apply these changes using terraform apply. Terraform will update existing instances in line with the configuration changes.
+7. Destroy instances: If you no longer need the instances, you can run terraform destroy to delete them. Terraform will take care of dismantling the instances and update the status file accordingly.
+
+
+
 > Take a screenshot of the Google Cloud Console showing your Google Compute instance and put it in the report.
+
+![](.\figures\google_cloud_instance.png)
 
 
 
