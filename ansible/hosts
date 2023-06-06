@@ -1,1 +1,2 @@
- gce_instance ansible_ssh_host=34.65.3.209
+[webservers]
+gce_instance ansible_ssh_host=34.65.3.209

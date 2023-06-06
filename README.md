@@ -351,25 +351,141 @@ When the infrastructure is recreated, the public IP address of the managed VM mi
 
 # Task 5: Install a web server and configure a web site
 
+We didn't encounter any difficulty doing this part. After copying the files in the directory, we launched succesfully the playbook:
+
+![](figures/task5_plabook.png)
 
 
 
+> Explain the usage of each file and its contents, add comments to  the different blocks if needed (we must ensure that you understood what  you have done). Link to the online documentation.
+
+`web.yml`:
+
+Defines the tasks to configure the webserver with nginx. It specifies that the tasks should be executed on the hosts belonging to the `webservers` group. It uses the `apt` module to install nginx, copies configuration files, templates, and restarts the nginx service.
+
+```yaml
+- name: Configure webserver with nginx    # Name of the playbook
+  hosts: webservers                       # Target hosts
+  become: True                            # Use elevated privileges (sudo)
+  tasks:                                  # List of tasks to perform
+  
+# Task 1: Install nginx
+# Use the 'apt' module to install nginx
+    - name: install nginx    
+      apt: name=nginx update_cache=yes
+
+# Task 2: Copy nginx conf file to target host
+# Use the 'copy' module to copy the nginx.conf file from the local 'files' directory to the target host's location.
+   - name: copy nginx config file        
+      copy: src=files/nginx.conf dest=/etc/nginx/sites-available/default  
+
+# Task 3: Create a symbolic link for the nginx configuration file in 'sites-enabled' directory
+# Use the 'file' module to ensure the symbolic link exists. This will enable the nginx configuration.
+    - name: enable configuration          
+      file: >
+        dest=/etc/nginx/sites-enabled/default
+        src=/etc/nginx/sites-available/default
+        state=link   
+        
+# Task 4: Copy the index.html file to the target host's nginx document root
+# Use the 'template' module to render the 'index.html.j2' file from the local 'templates' directory and copy it to the target host's location.
+    - name: copy index.html               
+      template: src=templates/index.html.j2 dest=/usr/share/nginx/html/index.html mode=0644
+
+# Task 5: Restart the nginx service
+# Use the 'service' module to ensure the nginx service is restarted, thus activating the new configuration.
+    - name: restart nginx                 
+      service: name=nginx state=restarted 
+```
+
+Documentation: 
+
+- Apt: https://docs.ansible.com/ansible/latest/collections/ansible/builtin/apt_module.html
+- Copy: https://docs.ansible.com/ansible/latest/collections/ansible/builtin/copy_module.html
+- Files: https://docs.ansible.com/ansible/latest/collections/ansible/builtin/file_module.html
+- Templates: https://docs.ansible.com/ansible/latest/collections/ansible/builtin/template_module.html
+- Service: https://docs.ansible.com/ansible/latest/collections/ansible/builtin/service_module.html
+
+`nginx.conf`:
+
+Contains the configuration for the nginx web server. It defines the server block with the `listen` directive, `root` directory, and other settings.
+
+```bash
+server {
+	# Listens on port 80. The 'default_server' option makes this server block the default.
+    listen 80 default_server;
+    
+    # Also listen on IPv6 addresses.
+    listen [::]:80 default_server ipv6only=on;
+    
+	# Document root - where the web files are located.
+    root /usr/share/nginx/html;
+    
+    # Default files to serve if a directory is requested.
+    index index.html index.htm;            
+
+	# Server name. This is useful for serving different content for different domains.
+    server_name localhost;                 
+
+	# For requests to the root directory or any subdirectory, try to serve the file or 		directory that was requested. If it doesn't exist, return a 404 error.
+    location / {                           
+        try_files $uri $uri/ =404;
+    }
+}
+
+```
+
+Documentation :  https://nginx.org/en/docs/beginners_guide.html
 
 
 
-> Explain the usage of each file and its contents, add comments to  the different blocks if needed (we must ensure that you understood what  you have done). Link to the online documentation. Link to the online  documentation.
+`index.html.j2`:
 
+Jinja2 template for the `index.html` file. It will be rendered by Ansible's `template` module. Jinja2 is a  templating language for Python, modeled after Django’s templates. It's used to dynamically create configuration files for applications based on variables. It is  useful with Ansible to generate different configuration files for different systems, with different settings based on the host, environment, or other factors.
 
+```HTML
+<html>
+    <head>
+    <title>Welcome to ansible</title> </head>
+    <body>
+    <h1>nginx, configured by Ansible</h1>
+    <p>If you can see this, Ansible successfully installed nginx.</p>
+    <!-- Will be replaced with a string that tells how this file is managed by Ansible -->
+    <p>{{ ansible_managed }}</p> 
+    <p>Some facts Ansible gathered about this machine:
+    <table>
+        <!-- The OS family will be dynamically filled by Ansible -->
+        <tr><td>OS family:</td><td>{{ ansible_os_family }}</td></tr>
+        
+        <!-- The OS distribution will be dynamically filled by Ansible -->
+        <tr><td>Distribution:</td><td>{{ ansible_distribution }}</td></tr>
+        
+        <!-- The OS distribution version will be dynamically filled by Ansible. -->
+        <tr><td>Distribution version:</td><td>{{ ansible_distribution_version }}</td></tr> 
+    </table>
+    </p>
+    </body>
+</html>
+```
 
-
+Documentation: https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_templating.html
 
 
 
 > Copy your hosts file into your report.
 
+`hosts`:
+
+```
+[webservers]
+gce_instance ansible_ssh_host=34.65.3.209
+```
 
 
 
+Here is a screenshot of the website we deployed on the instance:
+
+![Task5_nginx](figures/Task5_nginx.png)
 
 
 
@@ -377,9 +493,52 @@ When the infrastructure is recreated, the public IP address of the managed VM mi
 
 
 
+Handlers are just like regular tasks, but they run only if notified by another task. If a task returns 'changed', then all of the 'notify' directives (which are  referenced by the handler's name) will be triggered. Appart from a problem in the indentation of the playbook, we didn't encounter any problems deploying it:
+![](figures/task6_plabook.png)
+
 
 
 > Copy the modified playbook into your report.
+
+```yaml
+- name: Configure webserver with nginx
+  hosts: webservers
+  become: True
+  tasks:
+    - name: install nginx
+      apt: name=nginx update_cache=yes
+
+    - name: copy nginx config file
+      copy: 
+        src: files/nginx.conf 
+        dest: /etc/nginx/sites-available/default
+      notify: Restart nginx # Notify the handler whenever this task changes something
+
+    - name: enable configuration
+      file: 
+        dest: /etc/nginx/sites-enabled/default
+        src: /etc/nginx/sites-available/default
+        state: link
+      notify: Restart nginx # Notify the handler whenever this task changes something
+
+    - name: copy index.html
+      template: 
+        src: templates/index.html.j2 
+        dest: /usr/share/nginx/html/index.html 
+        mode: 0644
+      notify: Restart nginx # Notify the handler whenever this task changes something
+
+  handlers:
+    - name: Restart nginx  # Define the handler
+      service: 
+        name: nginx 
+        state: restarted
+
+```
+
+In this setup, the handler "Restart nginx" is notified whenever the  nginx configuration file is copied, the configuration is enabled, or the index.html file is copied. If any of these tasks lead to a change, the  handler will be triggered, and nginx will be restarted.
+
+Documentation: https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_handlers.html#handlers
 
 
 
@@ -387,21 +546,86 @@ When the infrastructure is recreated, the public IP address of the managed VM mi
 
 
 
+> Return to the output of running the *web.yml* playbook the first time. There is one additional task that was not in the playbook. Which one? Among the tasks that are in the playbook there is one task that Ansible marked as *ok*. Which one? Do you have a possible explanation?
+
+Here is the output:
+![](figures/task5_plabook.png)
+
+The additional task that was not in the playbook but is present in the output is "Gathering Facts". When Ansible runs, it will first gather facts about the systems it is managing before executing tasks. These facts are details about the system, such as network interfaces, operating system, IP addresses, etc. This information can then be used in our Ansible playbooks. This task is performed by default, unless explicitly skipped.
+
+Reference: [Ansible facts](https://docs.ansible.com/ansible/latest/user_guide/playbooks_vars_facts.html)
+
+The task marked as 'ok' is "enable configuration". When we run the playbook for the first time, the "enable configuration" task is marked as 'ok' because the `state` parameter of the `file` module in this task is set to `link`. In Ansible, the `file` module with `state: link` ensures a symbolic link exists. If the symbolic link at the specified `dest` path already exists in the system image provided by Google Cloud , then Ansible will report this task as 'ok' because the desired state is already present, hence no changes are needed.
+
+Reference: [Ansible file module](https://docs.ansible.com/ansible/latest/collections/ansible/builtin/file_module.html)
+
+
+
+> Re-run the *web.yml* playbook a second time. In principle nothing should have changed. Compare Ansible's output with the first run. Which tasks are marked as changed?
+
+No tasks were marked as "changed" during the second run of the `web.yml` playbook. Here is the output:
+
+![](figures/task6_plabook.png)
+
+
+
+> SSH into the managed server. Modify the NGINX configuration file */etc/nginx/sites-available/default*, for example by adding a line with a comment. Re-run the playbook. What does Ansible do to the file and what does it show in its output?
+
+Here is the output:
+![](figures/task7_workbook.png)
+
+We can see that the task "copy nginx config file" is marked as "changed". When we manually added a comment line in the `/etc/nginx/sites-available/default` file, we altered the state of the file on the remote machine. On the next run of the playbook, Ansible detected this difference between the desired state (as defined in your playbook) and the actual state on the remote machine. In order to achieve the desired state, Ansible overwrote the file on the remote machine with the version from your control node. 
+
+Moreover, as you we configured a handler to restart nginx whenever the nginx configuration file changes, the handler "Restart nginx" is also executed and marked as "changed".
+
+
+
+> Do something more drastic like completely removing the homepage and repeat the previous question.
+
+We deleted the default file. We had the exact same output as before. The result is the same as before, with the same explanation. We altered the state of the file => Ansible detected the difference => marked it as changed.
+
+
+
 > What is the differences between Terraform and Ansible? Can they both achieve the same goal?
 
+Terraform and Ansible are used for different purposes and have some distinct characteristics. They can sometimes overlap in functionality, but are used in conjunction to manage different stages of infrastructure lifecycle.
 
+Terraform is not configuration management tool, it doesn't care about the state of our machines, it cares about the state of the infrastructure. It manages resources such as compute instances, storage, and networking in a declarative manner. It maintains a state of the infrastructure and allows for reproducible deployments.
+
+Ansible is primarily a configuration management tool, it cares about the state of the machines and how to get them into the desired state. It can interact with cloud services, but its strength is in managing applications and system configuration on existing servers.
 
 
 
 > List the advantages and disadvantages of managing your  infrastructure with Terraform/Ansible vs. manually managing your  infrastructure. In which cases is one or the other solution more  suitable?
 
+Advantages:
+
+1. Speed & Efficiency: Automation allows for quick and repeatable deployments. This consistency reduces the potential for human error and ensures that deployments happen smoothly and efficiently.
+2. Scalability: Managing a large number of servers manually can quickly become unmanageable. With automation tools, you can easily manage a large infrastructure with less effort.
+3. Consistency & Reproducibility: Since the infrastructure is defined as code, it can be versioned and reviewed like any other code. This ensures that the infrastructure is consistent and reproducible.
+4. Collaboration: The Infrastructure as Code approach makes it easier for teams to understand and collaborate on infrastructure configuration.
+
+Disadvantages of using Terraform/Ansible:
+
+1. Learning curve: These tools have their own language and syntax which require time to learn.
+2. Complexity: For smaller, simpler environments, using these tools could add unnecessary complexity.
+3. Risk of over-reliance: There's a risk of becoming over-reliant on these tools, which can be problematic if there's a need to troubleshoot or intervene manually.
 
 
 
+> Suppose you now have a web server in production that you have  configured using Ansible. You are working in the IT department of a company and some of your system administrator colleagues who don't use  Ansible have logged manually into some of the servers to fix certain things. You don't know what they did exactly. What do you need to do to bring all the server again to the initial state? We'll exclude drastic changes by your colleagues for this question.
 
-> Suppose you now have a web server in production that you have  configured using Ansible. You are working in the IT department of a  company and some of your system administrator colleagues who don't use  Ansible have logged manually into some of the servers to fix certain  things. You don't know what they did exactly. What do you need to do to  bring all the server again to the initial state? We'll exclude drastic  changes by your colleagues for this question.
+Ansible is designed to be idempotent, this means that if we run our Ansible playbook again, it will restore the servers to the desired state as defined in the playbook.
 
+So:
 
+1. Double-check our Ansible playbook to make sure it's up to date and contains all the configurations we need for our servers.
+2. Execute the playbook against all the servers that our colleagues have manually modified. This should return the servers to the state as defined in the playbook. 
+3. Review the output from the Ansible playbook run. Any tasks that result in "changed" indicate that Ansible has performed an action on that server to bring it back into the desired state.
+
+This assumes that our playbook covers all the configurations necessary to restore the servers to their initial state. If not, we may need to enhance the playbook to cover more configurations.
+
+Finally, If our colleagues made fixes, that means that something was not working corectly. So after restoring the servers, we should add the fixes to the playbook, and teach how to use Ansible to our dearest colleagues.
 
 # Task 8 (optionnal) : Configure your infrastructure using a CI/CD Pipeline
 
