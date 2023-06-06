@@ -294,7 +294,7 @@ Now, to manage the instances, we can make changes to the configuration (e.g. ins
 
 Finally, if we want to delete specific instances, we have 2 options:
 
-Option 1: Remove Resource Block by simply deleting the  the resource block in our `main.tf` file that corresponds to the instance you want to delete, then run `terraform plan` and `terraform apply`. Terraform will identify that the instance needs to be deleted and handle the removal accordingly.
+Option 1: Remove Resource Block by simply deleting the  the resource block in our `main.tf` file that corresponds to the instance we want to delete, then run `terraform plan` and `terraform apply`. Terraform will identify that the instance needs to be deleted and handle the removal accordingly.
 
 Option 2: Run `terraform destroy -target=<resource_address>` . This allows us to specifically target and delete a specific resource without modifying the configuration file. This approach is useful when we want to delete a resource without removing its resource block from the configuration permanently.
 
@@ -574,9 +574,9 @@ No tasks were marked as "changed" during the second run of the `web.yml` playboo
 Here is the output:
 ![](figures/task7_workbook.png)
 
-We can see that the task "copy nginx config file" is marked as "changed". When we manually added a comment line in the `/etc/nginx/sites-available/default` file, we altered the state of the file on the remote machine. On the next run of the playbook, Ansible detected this difference between the desired state (as defined in your playbook) and the actual state on the remote machine. In order to achieve the desired state, Ansible overwrote the file on the remote machine with the version from your control node. 
+We can see that the task "copy nginx config file" is marked as "changed". When we manually added a comment line in the `/etc/nginx/sites-available/default` file, we altered the state of the file on the remote machine. On the next run of the playbook, Ansible detected this difference between the desired state (as defined in our playbook) and the actual state on the remote machine. In order to achieve the desired state, Ansible overwrote the file on the remote machine with the version from our control node. 
 
-Moreover, as you we configured a handler to restart nginx whenever the nginx configuration file changes, the handler "Restart nginx" is also executed and marked as "changed".
+Moreover, as we configured a handler to restart nginx whenever the nginx configuration file changes, the handler "Restart nginx" is also executed and marked as "changed".
 
 
 
@@ -601,7 +601,7 @@ Ansible is primarily a configuration management tool, it cares about the state o
 Advantages:
 
 1. Speed & Efficiency: Automation allows for quick and repeatable deployments. This consistency reduces the potential for human error and ensures that deployments happen smoothly and efficiently.
-2. Scalability: Managing a large number of servers manually can quickly become unmanageable. With automation tools, you can easily manage a large infrastructure with less effort.
+2. Scalability: Managing a large number of servers manually can quickly become unmanageable. With automation tools, we can easily manage a large infrastructure with less effort.
 3. Consistency & Reproducibility: Since the infrastructure is defined as code, it can be versioned and reviewed like any other code. This ensures that the infrastructure is consistent and reproducible.
 4. Collaboration: The Infrastructure as Code approach makes it easier for teams to understand and collaborate on infrastructure configuration.
 
