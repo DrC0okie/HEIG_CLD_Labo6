@@ -312,13 +312,40 @@ Note that we had to set up a virtual Python environment that we named `ansible-e
 
 ![](.\figures\ansible_installation.png)
 
+
+
 # Task 4: Configure Ansible to connect to the managed VM
 
+Here is the ansible.cfg file content:
 
+```
+[defaults]
+inventory = hosts
+remote_user = cookie
+private_key_file = ../credentials/labgce-ssh-key
+host_key_checking = false
+deprecation_warnings = false
+```
+
+
+
+Here is the hosts file content:
+
+```
+ gce_instance ansible_ssh_host=34.65.3.209
+```
+
+
+
+Here is a screenshot of the ping and uptime commands:
+
+![](figures/Task3_ping_uptime.png)
+
+# 
 
 > What happens if the  infrastructure is deleted and then recreated with Terraform? What needs  to be updated to access the infrastructure again?
 
-
+When the infrastructure is recreated, the public IP address of the managed VM might change. We would need to update the `hosts` file with the new public IP address.
 
 
 
@@ -356,7 +383,7 @@ Note that we had to set up a virtual Python environment that we named `ansible-e
 
 
 
-# Task 7: Test Desired State Configuration principles<
+# Task 7: Test Desired State Configuration principles
 
 
 
