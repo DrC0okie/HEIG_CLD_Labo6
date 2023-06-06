@@ -199,43 +199,104 @@ gce_ssh_pub_key_file_path = "../credentials/labgce-ssh-key.pub"
 
 > Explain what the files created by Terraform are used for.
 
+When we do a `terraform init`, it will create 1 directory and 4 files:
 
-
-In Terraform, the`terraform.tfvars` file is used to provide input variables for your infrastructure deployments. It is a file with a specific format that allows you to define and assign values to variables used in your Terraform configuration.
-
-
-
-> Where is the Terraform state saved? Imagine you are working in a team  and the other team members want to use Terraform, too, to manage the  cloud infrastructure. Do you see any problems with this? Explain.
-
-
-
-By default, the Terraform state is stored in locally a file name `terraform.state`. The problem is that if other people want to work on the projet, they don't have this file. When we work in a team, it is recommended to store the state remotely for collaboration and consistency.
+1. `.terraform/`: This directory is created at the root of the Terraform working directory and contains all the necessary files for the Terraform backend and provider plugins.
+2. `.terraform.lock.hcl`: This file records the exact versions of the provider plugins used for the configuration. It ensures reproducibility and consistency when working with Terraform.
+3. `terraform.tfstate` : If we are using a local backend, Terraform may create this file to store the state of our infrastructure. However, if we are using a remote backend, the state file is typically stored remotely and not created locally.
+4. `terraform.tfstate.backup` : If a previous state file exists, Terraform may create a backup of it with this filename. The backup file helps protect against accidental loss or corruption of the state file.
 
 
 
-> What happens if you reapply the configuration (1) without changing `main.tf` (2) with a change in `main.tf`? Do you see any changes in Terraform's output? Why? Can you think of  exemples where Terraform needs to delete parts of the infrastructure to  be able to reconfigure it?
+> Where is the Terraform state saved? 
+
+By default, the Terraform state is stored in locally a file name `terraform.state`. 
 
 
 
-(1) If wew reapply the configuration whitout making any changes to the `main.tf` file on our Terraform project, it will detect that there are no changes to apply and will simply refresh the state of our infrastructure. This means that it will query the current state of our ressources and update the Terraform status file accordingly, but itl will not make any changes to out infrastructure.
+> Imagine you are working in a team  and the other team members want to use Terraform, too, to manage the  cloud infrastructure. Do you see any problems with this? Explain.
 
-(2) If we make a change to the `maint.tf` file, and then reapply the configuration, Terraform will compare the new desired state with the current state of our infrastructure. It will determine the changes required to achieve the new desired state, and apply these changes accordingly. Terraform will create, update or remove the resources required to match the new configuration.
+1. When multiple people simultaneously modify the infrastructure, conflicts can appear when committing and merging changes to the Git repository. Since the state file is binary and changes frequently, it can cause conflicts and difficulties in resolving them.
+2. Storing the state file in Git requires continuous synchronization between team members. Each team member needs to ensure they have the latest state file before running Terraform commands.
+3. The Terraform state file may contain sensitive information, such as resource IDs, credentials, and private IP addresses. Storing it in a Git repository potentially exposes this sensitive information to  unauthorized access.
+
+To solve these problems, we could use a remote backend for storing the Terraform state, such as Terraform Cloud, AWS S3, or Azure Blob Storage. This can provide a centralized and secure storage solution for the state file. It enables better collaboration, concurrency control, and automatic versioning. Each team  member can access the state file without relying on Git synchronization, and sensitive information is protected in a more secure manner.
+
+
+
+> What happens if you reapply the configuration (1) without changing `main.tf` (2) with a change in `main.tf`? Do you see any changes in Terraform's output? Why?
+
+(1) If we reapply the configuration whitout making any changes to the `main.tf` file on our Terraform project, it will detect that there are no changes to apply and will simply refresh the state of our infrastructure. This means that it will query the current state of our ressources and update the Terraform status file accordingly, but itl will not make any changes to out infrastructure.
+
+(2) If we make a change to the `maint.tf` file, Terraform will detect the change in the configuration file and compare it to the current state of the infrastructure. Depending on the nature of the change, Terraform may need to modify or recreate resources to align with the updated configuration. The Terraform output will display the changes it plans to make, such as creating new resources, modifying existing resources, or destroying and recreating resources as needed.
+
+
+
+> Can you think of examples where Terraform needs to delete parts of the infrastructure to be able to reconfigure it?
+
+Sometimes, Terraform determines that the existing resources do not match the desired configuration, and must takes the necessary steps to reconcile the infrastructure with the new state. For example:
+
+1. If we change the type of a resource in the configuration (e.g., from an EC2 instance to an RDS database), Terraform needs to delete the existing resource and create a new one to run the change.
+2. When we modify certain attributes of a resource, such as changing the size or configuration of an instance, Terraform may need to destroy and recreate the resource to apply the changes.
+3. If we remove a resource from the configuration, Terraform will plan to delete the corresponding resource from the infrastructure to ensure it aligns with the desired state.
+4. If we modify the dependencies between resources, Terraform may need to update the order in which it creates or modifies resources. This can result in deleting and recreating resources to reflect the new dependencies.
 
 
 
 > Explain what you would need to do to manage multiple instances.
 
+In our `main.tf` file, we can define multiple resource blocks for each VM instance we want to create. Each resource block represents an individual VM configuration, for example:
 
+```
+resource "google_compute_instance" "instance1" {
+  # Configuration for instance 1
+}
 
-To manage multiple instances in Terraform, we typically have to follow these steps :
+resource "google_compute_instance" "instance2" {
+  # Configuration for instance 2
+}
+```
 
-1. Define variables : Define in a Terraform configuration make it flexible et reusable. These variables can include things like instance count, instance type and any other parameters that may vary between instances.
-2. Create Resource Definition : Define the resource block in our Terraform configuration file to represent a single instance. Whitin the ressource blocl, you can reference the variables defined in step 1 to make it configurable.
-3. Use the `count` or `for_each` meta-arguments: you can use the  `count` or `for_each` meta-arguments to control the number of instances you wish to manage. The `count` argument lets you specify a fixed number of instances, while `for_each` lets you define a map or set of instances.
-4. Iterate over instances: If you use `for_each`, iterate over instances using a loop in your Terraform code. This allows you to define unique names and other attributes for each instance.
-5. Apply configuration: Run terraform apply to create the desired number of instances based on the defined configuration. Terraform will create the instances and track their status in the Terraform status file.
-6. Manage instances: Since Terraform manages instances, you can make changes to the configuration (e.g. instance type, security groups, etc.) and apply these changes using terraform apply. Terraform will update existing instances in line with the configuration changes.
-7. Destroy instances: If you no longer need the instances, you can run terraform destroy to delete them. Terraform will take care of dismantling the instances and update the status file accordingly.
+To create multiple instances more dynamically, we can leverage loops or dynamic expressions. We can use the `count` parameter in resource blocks or the `for_each` parameter to iterate over a list or map of instance configurations. Example with `count`:
+```
+resource "google_compute_instance" "instance" {
+  count = 3
+
+  # Configuration for each instance
+}
+```
+
+Example with `for_each`:
+```
+variable "instances" {
+  description = "Map of instance configurations"
+  type        = map(object({
+    # Define instance configuration attributes
+  }))
+  default = {
+    "instance1" = { ... },
+    "instance2" = { ... },
+  }
+}
+
+resource "google_compute_instance" "instance" {
+  for_each = var.instances
+
+  # Configuration for each instance
+}
+```
+
+If we have multiple instances with different configurations, we can  manage variables for each instance by defining them in a separate file or data structure. This allows to specify instance-specific values and easily update the configurations.
+
+As we responded in the previous question, we can set up a remote state backend for improved collaboration and shared state management.
+
+Now, to manage the instances, we can make changes to the configuration (e.g. instance type, security groups, etc.) and apply these changes using `terraform apply`. Terraform will update existing instances in line with the configuration changes.
+
+Finally, if we want to delete specific instances, we have 2 options:
+
+Option 1: Remove Resource Block by simply deleting the  the resource block in our `main.tf` file that corresponds to the instance you want to delete, then run `terraform plan` and `terraform apply`. Terraform will identify that the instance needs to be deleted and handle the removal accordingly.
+
+Option 2: Run `terraform destroy -target=<resource_address>` . This allows us to specifically target and delete a specific resource without modifying the configuration file. This approach is useful when we want to delete a resource without removing its resource block from the configuration permanently.
 
 
 
