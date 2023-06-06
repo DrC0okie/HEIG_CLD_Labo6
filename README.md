@@ -1,7 +1,7 @@
 # CLD - LAB06 : Infrastructure-as-code and configuration management - Terraform, Ansible and Gitlab
 **Group S : A. David, T. Van Hove**
 
-**Date : 01.06.2023**
+**Date : 08.06.2023**
 
 **Teacher : Prof. Marcel Graf**
 
